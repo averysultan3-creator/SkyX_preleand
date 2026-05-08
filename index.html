@@ -402,5 +402,95 @@
       </aside>
     </section>
   </main>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Apex Lead Router — Tracking Pixel
+       Tracks: page_view · cta_click · time_on_page
+       ─────────────────────────────────────────────────────────────────────
+       CONFIGURE:
+         APEX_SERVER    — URL вашего сервера (без слэша в конце)
+         PRELAND_SLUG   — slug прелендинга из бота (раздел 🌐 Прелендинги)
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <script>
+    (function () {
+      /* ── CONFIG — измените эти две строки ───────────────────────── */
+      var APEX_SERVER   = "https://YOUR_DOMAIN.COM";   // ← ваш сервер
+      var PRELAND_SLUG  = "skyx-pl-1";                 // ← slug из бота
+
+      /* ── helpers ────────────────────────────────────────────────── */
+      function uuidv4() {
+        return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, function(c) {
+          return (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
+        });
+      }
+      function getParam(name) {
+        try { return new URLSearchParams(window.location.search).get(name) || ""; }
+        catch(e) { return ""; }
+      }
+      function post(path, data) {
+        try {
+          var body = JSON.stringify(data);
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon(APEX_SERVER + path, body);
+          } else {
+            fetch(APEX_SERVER + path, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: body,
+              keepalive: true
+            }).catch(function(){});
+          }
+        } catch(e) {}
+      }
+
+      /* ── visitor session id ─────────────────────────────────────── */
+      var VID_KEY = "ax_vid_" + PRELAND_SLUG;
+      var vid = sessionStorage.getItem(VID_KEY);
+      if (!vid) { vid = uuidv4(); sessionStorage.setItem(VID_KEY, vid); }
+
+      var startTs = Date.now();
+      var utms = {
+        utm_source:   getParam("utm_source"),
+        utm_medium:   getParam("utm_medium"),
+        utm_campaign: getParam("utm_campaign"),
+        utm_content:  getParam("utm_content")
+      };
+
+      /* ── page_view ──────────────────────────────────────────────── */
+      post("/track/page-view", Object.assign({
+        preland_slug: PRELAND_SLUG,
+        visitor_id:   vid,
+        referer:      document.referrer || ""
+      }, utms));
+
+      /* ── time_on_page (кнопка "leave") ──────────────────────────── */
+      function sendLeave() {
+        var secs = Math.round((Date.now() - startTs) / 1000);
+        post("/track/button-click", Object.assign({
+          preland_slug: PRELAND_SLUG,
+          visitor_id:   vid,
+          button_id:    "leave_" + secs + "s"
+        }, utms));
+      }
+      window.addEventListener("beforeunload", sendLeave);
+      document.addEventListener("visibilitychange", function() {
+        if (document.visibilityState === "hidden") sendLeave();
+      });
+
+      /* ── CTA click ──────────────────────────────────────────────── */
+      document.addEventListener("DOMContentLoaded", function() {
+        var ctaBtn = document.querySelector(".cta");
+        if (ctaBtn) {
+          ctaBtn.addEventListener("click", function() {
+            post("/track/button-click", Object.assign({
+              preland_slug: PRELAND_SLUG,
+              visitor_id:   vid,
+              button_id:    "cta_telegram"
+            }, utms));
+          });
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
