@@ -406,97 +406,10 @@
     </section>
   </main>
 
-  <!-- ═══════════════════════════════════════════════════════════════════════
-       Apex Lead Router — Tracking Pixel
-       Tracks: page_view · cta_click · time_on_page
-       ─────────────────────────────────────────────────────────────────────
-       CONFIGURE:
-         APEX_SERVER    — URL вашего сервера (без слэша в конце)
-         PRELAND_SLUG   — slug прелендинга из бота (раздел 🌐 Прелендинги)
-       ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- Apex Lead Router — tracking pixel (sendBeacon, slug=prostaya_001) -->
   <script>
-    (function () {
-      /* ── CONFIG — измените эти две строки ───────────────────────── */
-      var APEX_SERVER   = "https://YOUR_DOMAIN.COM";   // ← ваш сервер
-      var PRELAND_SLUG  = "skyx-pl-1";                 // ← slug из бота
-
-      /* ── helpers ────────────────────────────────────────────────── */
-      function uuidv4() {
-        return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, function(c) {
-          return (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
-        });
-      }
-      function getParam(name) {
-        try { return new URLSearchParams(window.location.search).get(name) || ""; }
-        catch(e) { return ""; }
-      }
-      function post(path, data) {
-        try {
-          var body = JSON.stringify(data);
-          if (navigator.sendBeacon) {
-            navigator.sendBeacon(APEX_SERVER + path, body);
-          } else {
-            fetch(APEX_SERVER + path, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: body,
-              keepalive: true
-            }).catch(function(){});
-          }
-        } catch(e) {}
-      }
-
-      /* ── visitor session id ─────────────────────────────────────── */
-      var VID_KEY = "ax_vid_" + PRELAND_SLUG;
-      var vid = sessionStorage.getItem(VID_KEY);
-      if (!vid) { vid = uuidv4(); sessionStorage.setItem(VID_KEY, vid); }
-
-      var startTs = Date.now();
-      var utms = {
-        utm_source:   getParam("utm_source"),
-        utm_medium:   getParam("utm_medium"),
-        utm_campaign: getParam("utm_campaign"),
-        utm_content:  getParam("utm_content")
-      };
-
-      /* ── page_view ──────────────────────────────────────────────── */
-      post("/track/page-view", Object.assign({
-        preland_slug: PRELAND_SLUG,
-        visitor_id:   vid,
-        referer:      document.referrer || ""
-      }, utms));
-
-      /* ── time_on_page (кнопка "leave") ──────────────────────────── */
-      function sendLeave() {
-        var secs = Math.round((Date.now() - startTs) / 1000);
-        post("/track/button-click", Object.assign({
-          preland_slug: PRELAND_SLUG,
-          visitor_id:   vid,
-          button_id:    "leave_" + secs + "s"
-        }, utms));
-      }
-      window.addEventListener("beforeunload", sendLeave);
-      document.addEventListener("visibilitychange", function() {
-        if (document.visibilityState === "hidden") sendLeave();
-      });
-
-      /* ── CTA click ──────────────────────────────────────────────── */
-      document.addEventListener("DOMContentLoaded", function() {
-        var ctaBtn = document.querySelector(".cta");
-        if (ctaBtn) {
-          ctaBtn.addEventListener("click", function() {
-            post("/track/button-click", Object.assign({
-              preland_slug: PRELAND_SLUG,
-              visitor_id:   vid,
-              button_id:    "cta_telegram"
-            }, utms));
-          });
-        }
-      });
-    })();
+(function(){try{var APEX="https://thirstily-auction-diary.ngrok-free.dev",_DEF_PL="prostaya_001";var _p=new URLSearchParams(location.search);var PL=_p.get('pl')||null;if(!PL)PL=_DEF_PL;if(!PL){var _sc=document.currentScript;if(_sc){var _su=_sc.getAttribute('src')||'';var _pm=_su.match(/[?&]pl=([^&]+)/);if(_pm)PL=decodeURIComponent(_pm[1]);}}if(!PL){var _h=(location.hostname||'').replace(/^www\./,''),_pa=(location.pathname||'/').replace(/\/+$/,'')||'/';PL=(_h+_pa).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80)||'auto';}var _vid=null;try{_vid=localStorage.getItem('_apx_vid');if(!_vid){_vid=Math.random().toString(36).slice(2)+(+new Date).toString(36);localStorage.setItem('_apx_vid',_vid);}}catch(_e){_vid=Math.random().toString(36).slice(2)+(+new Date).toString(36);}function _qs(ex){var q={pl:PL,vid:_vid,utm_source:_p.get('utm_source')||'',utm_campaign:_p.get('utm_campaign')||'',ref:encodeURIComponent(document.referrer||'')};if(ex)for(var k in ex)q[k]=ex[k];return Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]||'');}).join('&');}function _send(ep,ex){var u=APEX+ep+'?'+_qs(ex);if(navigator.sendBeacon){try{navigator.sendBeacon(u);return;}catch(_e){}}try{new Image().src=u;}catch(_e){}}_send('/track/pv');document.addEventListener('click',function(ev){var el=ev.target;while(el&&el!==document){if(el.getAttribute){var _t=el.getAttribute('data-track-click');if(_t){_send('/track/bc',{b:_t});return;}if(el.tagName==='A'){var _hr=(el.getAttribute('href')||'').toLowerCase();if(_hr.indexOf('t.me/')>-1||_hr.indexOf('tg://')===0||_hr.indexOf('telegram.me/')>-1||_hr.indexOf('wa.me/')>-1||_hr.indexOf('whatsapp.com')>-1){_send('/track/bc',{b:'cta'});return;}}}el=el.parentNode;}},true);}catch(_e){}})();
   </script>
-<script src="https://thirstily-auction-diary.ngrok-free.dev/track/pixel.js"></script>
-
 
 </body>
 </html>
